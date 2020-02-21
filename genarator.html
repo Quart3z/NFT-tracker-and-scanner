@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>NFt Marker Creator</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="text/javascript" src="jquery-3.4.1.min.js"></script>
+
+</head>
+<body>
+    <div class="container">
+        <p id="title" href="#confidenceLevel">NFT Marker Creator</p>
+        <input type="file" id="imageLoader" name="imageLoader" style="display: none;"/>
+        <button id="uploadBt" onclick="document.getElementById('imageLoader').click();" class="bt">Upload Image</button>
+        <button id="generateBt" onclick="generate()" class="bt" disabled>Generate</button>
+        <button id="generate_btn" class="bt" >Gray</button>
+        <div id="wrapper">
+            <canvas id="imageCanvas"></canvas>
+            <img id="tracker_pic" src=""><br>
+            <canvas id="canvas" ></canvas>
+            <canvas id="grey_canvas" ></canvas><br>
+    
+        </div>
+        
+        <canvas id="hideCanvas"></canvas><br>
+        
+    
+    
+    </div>
+
+    <!-- <button onclick="downloadIset()">download</button> -->
+
+    <div id="modal">
+        <div id="modalBody">
+            <p id="modalTitle">No "Number of Channels" found!</p>
+            <p id="modalTxt">Inform the number of channels(nc):<br>(black and white images have NC=1, colored images have NC=3)</p>
+            <input id="modalInput" type="number"  value="3">
+            <button id="cancelBt" class="bt modBt" onclick="closeModal()">Cancel</button>
+            <button id="confirmBt" class="bt modBt" onclick="setValueFromModal()">Confirm</button>
+        </div>
+    </div>
+
+    <!-- <script src="PNGReader.js"></script> -->
+    <script type="text/javascript" src="inspirit-jsfeat-4c7b336/build/jsfeat.js"></script>
+    <script type="text/javascript" src="tracking.js-master/build/tracking.js"></script>
+    <script src="NFT-Marker-Creator-master/docs/exif.js"></script>
+    <script type='text/javascript'>
+          var artoolkit_wasm_url = 'NFT-Marker-Creator-master/docs/wasm/NftMarkerCreator_wasm.wasm';
+    </script>
+    <script async type="text/javascript" src="NFT-Marker-Creator-master/docs/wasm/NftMarkerCreator_wasm.js"></script>
+    <script src="generator.js"></script>
+    <script src="greyscale.js"></script>
+</body>
+</html>
