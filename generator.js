@@ -12,6 +12,7 @@ var reader = new FileReader();
 
 var name;
 var nameWithExt;
+var gray;
 
 var globalObj = {
     dpi: 0,
@@ -24,7 +25,7 @@ var globalObj = {
 function readURL(input) {
     if (input.files && input.files[0]) {
         var reader = new FileReader();
-        
+
         reader.onload = function (e) {
             $('#tracker_pic').attr('src', e.target.result);
         }
@@ -58,6 +59,9 @@ function handleImage(e) {
 }
 
 function generate() {
+
+    toGray();
+
     var imageCanvas = document.querySelector('#imageCanvas');
     imageCanvas.style.opacity = 0.25;
 
@@ -70,12 +74,15 @@ function generate() {
         Module._createImageSet(heapSpace, globalObj.dpi, globalObj.w, globalObj.h, globalObj.nc, name, cmdArr.length, cmdArr);
         Module._free(heapSpace);
 
-        
+
         downloadIset();
     }, 500);
 }
 
 function downloadIset() {
+
+    $("#loading").hide();
+
     let mime = "application/octet-stream";
 
     let filenameIset = "asa.iset";
@@ -91,19 +98,25 @@ function downloadIset() {
     let contentFset3 = Module.FS.readFile(filenameFset3);
 
     var a = document.createElement('a');
-    a.download = name + ext;
+    a.download = "marker.iset";
     a.href = URL.createObjectURL(new Blob([content], { type: mime }));
     a.style.display = 'none';
 
     var b = document.createElement('a');
-    b.download = name + ext2;
+    b.download = "marker.fset";
     b.href = URL.createObjectURL(new Blob([contentFset], { type: mime }));
     b.style.display = 'none';
 
     var c = document.createElement('a');
-    c.download = name + ext3;
+    c.download = "marker.fset3";
     c.href = URL.createObjectURL(new Blob([contentFset3], { type: mime }));
     c.style.display = 'none';
+
+    var d = document.createElement('a');
+    var p = globalObj.w + "\n" + globalObj.h + "\n" + globalObj.dpi;
+    d.download = 'marker.txt';
+    d.href = URL.createObjectURL(new Blob([p], { type: "text/plain" }));
+    d.style.display = 'none';
 
     document.body.appendChild(a);
     a.click();
@@ -113,6 +126,9 @@ function downloadIset() {
 
     document.body.appendChild(c);
     c.click();
+
+    document.body.appendChild(d);
+    d.click();
 
 }
 
@@ -201,7 +217,7 @@ function readImage(e) {
 
         var img = new Image();
         img.onload = function () {
-            
+
             var canvasEl = document.querySelector('#imageCanvas');
             canvas.width = canvasEl.clientWidth;
             canvas.height = canvasEl.clientHeight;
@@ -213,7 +229,7 @@ function readImage(e) {
             globalObj.h = img.height;
 
             ctxHide.drawImage(img, 0, 0);
-            
+
             ctx.drawImage(img, 0, 0, img.width, img.height,     // source rectangle
                 0, 0, canvas.width, canvas.height); // destination rectangle
 
@@ -241,7 +257,7 @@ function readImage(e) {
 
             globalObj.arr = uint;
 
-        
+
         }
         img.src = event.target.result;
     }
@@ -249,37 +265,28 @@ function readImage(e) {
 }
 
 function calculateQuality(){
-    let gray = toGrayscale(globalObj.arr);
+
     let hist = getHistogram(gray);
     let ent = 0;
     let totSize = globalObj.w * globalObj.h;
-    for(let i = 0; i < 255; i++){ 
+    for(let i = 0; i < 255; i++){
         if(hist[i] > 0){
             let temp = (hist[i]/totSize)*(Math.log(hist[i]/totSize));
             ent += temp;
         }
     }
-    
+
     let entropy = (-1 * ent).toFixed(2);
-    let oldRange = (5.17 - 4.6);  
-    let newRange = (5 - 0);  
+    let oldRange = (5.17 - 4.6);
+    let newRange = (5 - 0);
     let level = (((entropy - 4.6) * newRange) / oldRange);
-    
+
     if(level > 5){
         level = 5;
     }else if(level < 0){
         level = 0;
     }
     return {l:level.toFixed(2), e: entropy};
-}
-
-function toGrayscale(arr){
-    let gray = [];
-    for(let i = 0; i < arr.length; i+=3){
-        let avg = (arr[i] + arr[i+1] + arr[i+2])/3;
-        gray.push(parseInt(avg));
-    }
-    return gray;
 }
 
 function getHistogram(arr){
@@ -293,4 +300,62 @@ function getHistogram(arr){
     return hist;
 }
 
+function toGray(){
 
+    var canvas = document.getElementById('canvas');
+    var context = canvas.getContext('2d');
+
+    var grey_canvas = document.getElementById('grey_canvas');
+    var grey_context = grey_canvas.getContext('2d');
+
+    var image = document.getElementById('tracker_pic');
+
+    var width = image.width;
+    var height = image.height;
+
+    canvas.width = width;
+    canvas.height = height;
+
+    grey_canvas.width = width;
+    grey_canvas.height = height;
+
+    window.fastThreshold = 30;
+
+    var doFindFeatures = function() {
+        //Tracking.js //To find features
+        tracking.Fast.THRESHOLD = window.fastThreshold;
+        context.drawImage(image, 0, 0, width, height);
+
+        var imageData = context.getImageData(0, 0, width, height);
+        gray = tracking.Image.grayscale(imageData.data, width, height);
+        var corners = tracking.Fast.findCorners(gray, width, height);
+
+        //JSFeat //To display greyscale image
+        var grey = new jsfeat.matrix_t(width, height, jsfeat.U8_t | jsfeat.C1_t );
+        var code = jsfeat.COLOR_RGBA2GRAY;
+        jsfeat.imgproc.grayscale(imageData.data, width, height, grey, code);
+
+        var data = new Uint32Array(imageData.data.buffer);
+        var alpha = (0xff << 24);
+        var i = width * height, pix = 0;
+        while (--i >= 0) {
+            pix = grey.data[i];
+            data[i] = alpha | (pix << 16) | (pix << 8) | pix;
+        }
+
+        grey_context.putImageData(imageData, 0, 0);
+        context.putImageData(imageData, 0, 0);
+        //JSFeat end
+
+        //To draw points of features
+        for (var i = 0; i < corners.length; i += 2) {
+            context.fillStyle = '#f00';
+            context.fillRect(corners[i], corners[i + 1], 3, 3);
+        }
+        //Tracking.js end
+    };
+
+    doFindFeatures();
+    $("p").show();
+    $("#loading").show();
+}

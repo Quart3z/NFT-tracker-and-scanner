@@ -20,15 +20,18 @@ body {
 }
 
 .bt {
-    color: white;
-    border-radius: 5px;
+    color: #303030;
+    border-radius: 15px;
     width: 10em;
     margin-top: 0.5em;
     cursor: pointer;
     padding: 0.25em;
-    font-size: 2em;
-    outline: inherit;
-    background-color: #023962;
+    margin: 5px;
+    font-size: 1.5em;
+    border: none;
+    box-shadow: 5px 5px 5px #888888;
+    outline: none;
+    background-color: #00a385;
 }
 
 .bt[disabled] {
